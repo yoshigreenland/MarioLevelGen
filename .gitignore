@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+# Allow directories to be traversed
+!*/
+
+# Un-ignore .py files everywhere
+!*.py
+
+# Track .gitignore itself
+!.gitignore

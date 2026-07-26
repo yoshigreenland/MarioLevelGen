@@ -405,16 +405,13 @@ Individual = Individual_Grid
 def generate_successors(population):
     # print(f"\t[?] Population size: {len(population)}")
     results = []
-    # STUDENT Design and implement this
-    # Hint: Call generate_children() on some individuals and fill up results.
-    prevParent = None
-    for currParent in population:
-        # print(f"[?] currParent: {currParent}")
-        if (prevParent != None):
-            # print(f"[?] prevParent: {prevParent}")
-            results.append(currParent.generate_children(prevParent))
-        prevParent = currParent
-    # print(f"[?] Results: {results}")
+    pop_limit = len(population);
+    ideal_proportion = 0.25
+    fit_sorted = sorted(population, key=Individual.fitness, reverse=True)
+    for i in range(pop_limit):
+        dad = fit_sorted[random.randint(0, int(pop_limit * ideal_proportion))]
+        mom = fit_sorted[random.randint(0, int(pop_limit * ideal_proportion))]
+        results.append(dad.generate_children(mom))
     return results
 
 

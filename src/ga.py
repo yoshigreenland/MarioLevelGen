@@ -62,33 +62,92 @@ class Individual_Grid(object):
             self.calculate_fitness()
         return self._fitness
 
+    def findNeighbors(self,genome,x,y):
+        myNeighbors = [] # 0 is the top. Goes clockwise
+        '''
+                    7 0 1
+                    6 G 2
+                    5 4 3
+
+            [0, 1, 2, 3, 4, 5, 6, 7]
+        '''
+        # 0
+        if (y-1 >= 0):
+            myNeighbors.append(genome[y-1][x])
+        else:
+            myNeighbors.append(None)
+        # 1
+        if (y-1 >= 0 and x+1 < len(genome[y-1])):
+            myNeighbors.append(genome[y-1][x+1])
+        else:
+            myNeighbors.append(None)
+        # 2
+        if (x+1 < len(genome[y])):
+            myNeighbors.append(genome[y][x+1])
+        else:
+            myNeighbors.append(None)
+        # 3
+        if (y+1 < len(genome) and x+1 < len(genome[y+1])):
+            myNeighbors.append(genome[y+1][x+1])
+        else:
+            myNeighbors.append(None)
+        # 4
+        if (y+1 < len(genome)):
+            myNeighbors.append(genome[y+1][x])
+        else:
+            myNeighbors.append(None)
+        # 5
+        if (y+1 < len(genome) and x-1 >= 0):
+            myNeighbors.append(genome[y+1][x-1])
+        else:
+            myNeighbors.append(None)
+        # 6 
+        if (x-1 >= 0):
+            myNeighbors.append(genome[y][x-1])
+        else:
+            myNeighbors.append(None)
+        # 7
+        if (y-1 >= 0 and x-1 >= 0):
+            myNeighbors.append(genome[y-1][x-1])
+        else:
+            myNeighbors.append(None)
+
+        return(myNeighbors)
+
+    def heightFromGround(self,genome, x,y):
+        height = 0
+        i = 1
+        while (y+i < len(genome) and genome[y+i][x] not in ('X', 'M', '?', 'B', 'T','|')):
+            height += 1
+            i += 1
+
+        return(height)
+
     # Mutate a genome into a new genome.  Note that this is a _genome_, not an individual!
     def mutate(self, genome):
         # STUDENT implement a mutation operator, also consider not mutating this individual
         # STUDENT also consider weighting the different tile types so it's not uniformly random
         # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
-
-        left = 1
-        right = width - 1
-        for y in range(height):
-            for x in range(left, right):
-                pass
-        return genome
+        pass
 
     # Create zero or more children from self and other
     def generate_children(self, other):
+        # print(f"\t[?] Calling generate_children with {self} and {other}")
         new_genome = copy.deepcopy(self.genome)
         # Leaving first and last columns alone...
         # do crossover with other
         left = 1
         right = width - 1
+        # print(f"\t\t[?] Data:\n\t\t\tleft: {left}\n\t\t\tright: {right}\n\t\t\tlen(self.genome) AKA len(new_genome): {len(self.genome)}\n\t\t\tlen(other.genome): {len(other.genome)}\n\t\t\tnew_genome(len: {len(new_genome)}): {new_genome}")
         for y in range(height):
             for x in range(left, right):
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
-                pass
+                new_genome[y][x] = other.genome[y][x]
+        newChild = Individual_Grid(new_genome)
+        newChild.mutate(new_genome)
         # do mutation; note we're returning a one-element tuple here
-        return (Individual_Grid(new_genome),)
+        return(newChild)
 
     # Turn the genome into a level string (easy for this genome)
     def to_level(self):
@@ -344,9 +403,18 @@ Individual = Individual_Grid
 
 
 def generate_successors(population):
+    # print(f"\t[?] Population size: {len(population)}")
     results = []
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
+    prevParent = None
+    for currParent in population:
+        # print(f"[?] currParent: {currParent}")
+        if (prevParent != None):
+            # print(f"[?] prevParent: {prevParent}")
+            results.append(currParent.generate_children(prevParent))
+        prevParent = currParent
+    # print(f"[?] Results: {results}")
     return results
 
 
@@ -364,10 +432,12 @@ def ga():
         population = [Individual.random_individual() if random.random() < 0.9
                       else Individual.empty_individual()
                       for _g in range(pop_limit)]
+        # print(f"[?] Initial Population: {population}")
         # But leave this line alone; we have to reassign to population because we get a new population that has more cached stuff in it.
         population = pool.map(Individual.calculate_fitness,
                               population,
                               batch_size)
+        # print(f"[?] Population after pool: {population}")
         init_done = time.time()
         print("Created and calculated initial population statistics in:", init_done - init_time, "seconds")
         generation = 0
@@ -380,16 +450,16 @@ def ga():
                 # Print out statistics
                 if generation > 0:
                     best = max(population, key=Individual.fitness)
-                    print("Generation:", str(generation))
-                    print("Max fitness:", str(best.fitness()))
-                    print("Average generation time:", (now - start) / generation)
-                    print("Net time:", now - start)
+                    print("\tGeneration:", str(generation))
+                    print("\t\tMax fitness:", str(best.fitness()))
+                    print("\t\tAverage generation time:", (now - start) / generation)
+                    print("\t\tNet time:", now - start)
                     with open("levels/last.txt", 'w') as f:
                         for row in best.to_level():
                             f.write("".join(row) + "\n")
                 generation += 1
                 # STUDENT Determine stopping condition
-                stop_condition = False
+                stop_condition = generation > 10
                 if stop_condition:
                     break
                 # STUDENT Also consider using FI-2POP as in the Sorenson & Pasquier paper
@@ -415,7 +485,7 @@ if __name__ == "__main__":
     print("Best fitness: " + str(best.fitness()))
     now = time.strftime("%m_%d_%H_%M_%S")
     # STUDENT You can change this if you want to blast out the whole generation, or ten random samples, or...
-    for k in range(0, 10):
+    for k in range(0, 1):
         with open("levels/" + now + "_" + str(k) + ".txt", 'w') as f:
             for row in final_gen[k].to_level():
                 f.write("".join(row) + "\n")

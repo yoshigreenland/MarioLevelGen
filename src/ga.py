@@ -217,7 +217,7 @@ class Individual_DE(object):
         # STUDENT Add more metrics?
         # STUDENT Improve this with any code you like
         coefficients = dict(
-            meaningfulJumpVariance=1.5,
+            meaningfulJumpVariance=2,
             negativeSpace=0.6,
             pathPercentage=0.5,
             emptyPercentage=0.6,
@@ -231,7 +231,7 @@ class Individual_DE(object):
         tall_elements = len(list(filter(lambda de:self.element_too_tall(de), self.genome)))
         if tall_elements > 5:
             penalties -= (tall_elements+3)
-        if len(self.genome) < 20:
+        if len(self.genome) < 48:
             penalties -= 2
         # STUDENT If you go for the FI-2POP extra credit, you can put constraint calculation in here too and cache it in a new entry in __slots__.
         self._fitness = sum(map(lambda m: coefficients[m] * measurements[m],
@@ -248,7 +248,7 @@ class Individual_DE(object):
         if de_type in ["4_block", "5_qblock", "3_coin"]:
             y = de[2]
         elif de_type == "7_pipe":
-            y = 16-de[2]
+            y = 16-de[2]-4
         elif de_type == "1_platform":
             y = de[3]
         else:
@@ -408,7 +408,7 @@ class Individual_DE(object):
             (random.randint(1, width - 2), "4_block", random.randint(4, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "5_qblock", random.randint(4, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "6_stairs", random.randint(4, height - 1), random.choice([-1, 1])),
-            (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 4))
+            (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 10))
         ]) for i in range(elt_count)]
         return Individual_DE(g)
 
@@ -417,20 +417,21 @@ class Individual_DE(object):
         # STUDENT Maybe enhance this
         elt_count = random.randint(8, 128)
         g = [random.choice([
-            (random.randint(1, width - 2), "0_hole", random.randint(1, 8)),
-            (random.randint(1, width - 2), "0_hole", random.randint(1, 8)),
-            (random.randint(1, width - 2), "1_platform", random.randint(1, 8), random.randint(0, height - 1), random.choice(["?", "X", "B"])),
-            (random.randint(1, width - 2), "1_platform", random.randint(1, 8), random.randint(0, height - 1), random.choice(["?", "X", "B"])),
+            (random.randint(1, width - 2), "0_hole", random.randint(2, 8)),
+            (random.randint(1, width - 2), "0_hole", random.randint(2, 8)),
+            (random.randint(1, width - 2), "1_platform", random.randint(2, 8), random.randint(0, height - 4), random.choice(["?", "X", "B"])),
+            (random.randint(1, width - 2), "1_platform", random.randint(2, 8), random.randint(0, height - 4), random.choice(["?", "X", "B"])),
             (random.randint(1, width - 2), "2_enemy"),
             (random.randint(1, width - 2), "2_enemy"),
-            (random.randint(1, width - 2), "3_coin", random.randint(0, height - 1)),
-            (random.randint(1, width - 2), "3_coin", random.randint(0, height - 1)),
+            (random.randint(1, width - 2), "3_coin", random.randint(4, height - 1)),
+            (random.randint(1, width - 2), "3_coin", random.randint(4, height - 1)),
             (random.randint(1, width - 2), "4_block", random.randint(0, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "4_block", random.randint(0, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "5_qblock", random.randint(0, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "5_qblock", random.randint(0, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "6_stairs", random.randint(1, height - 4), random.choice([-1, 1])),
-            (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 4))
+            (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 10)),
+            (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 10))
         ]) for i in range(elt_count)]
         return Individual_DE(g)
 

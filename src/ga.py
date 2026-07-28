@@ -45,10 +45,10 @@ class Individual_Grid(object):
         # Default fitness function: Just some arbitrary combination of a few criteria.  Is it good?  Who knows?
         # STUDENT Modify this, and possibly add more metrics.  You can replace this with whatever code you like.
         coefficients = dict(
-            meaningfulJumpVariance=0.5,
+            meaningfulJumpVariance=0.8,
             negativeSpace=0.6,
             pathPercentage=0.5,
-            emptyPercentage=0.6,
+            emptyPercentage=0.8,
             linearity=-0.5,
             solvability=2.0
         )
@@ -62,57 +62,207 @@ class Individual_Grid(object):
             self.calculate_fitness()
         return self._fitness
 
-    def findNeighbors(self,genome,x,y):
-        myNeighbors = [] # 0 is the top. Goes clockwise
-        '''
-                    7 0 1
-                    6 G 2
-                    5 4 3
+    def findNeighbors(self,genome, point:tuple, within:int):
+        # print(f"[#] Running findNeighors({genome}, {point}, {within})")
+        x,y = point
+        neighbors = []
+        currSize = 2
+        startOffset = 0
+        dir = 1
+        for currDist in range(1,within+1):
+            neighbors.append([])
+            # print(f"[?] Current distance is {currDist}")
+            # print(f"[?] Neighbors is {neighbors}")
+            # print(f"[?] startOffset is {startOffset}")
+            # print(f"[?] currSize is {currSize}")
 
-            [0, 1, 2, 3, 4, 5, 6, 7]
-        '''
-        # 0
-        if (y-1 >= 0):
-            myNeighbors.append(genome[y-1][x])
-        else:
-            myNeighbors.append(None)
-        # 1
-        if (y-1 >= 0 and x+1 < len(genome[y-1])):
-            myNeighbors.append(genome[y-1][x+1])
-        else:
-            myNeighbors.append(None)
-        # 2
-        if (x+1 < len(genome[y])):
-            myNeighbors.append(genome[y][x+1])
-        else:
-            myNeighbors.append(None)
-        # 3
-        if (y+1 < len(genome) and x+1 < len(genome[y+1])):
-            myNeighbors.append(genome[y+1][x+1])
-        else:
-            myNeighbors.append(None)
-        # 4
-        if (y+1 < len(genome)):
-            myNeighbors.append(genome[y+1][x])
-        else:
-            myNeighbors.append(None)
-        # 5
-        if (y+1 < len(genome) and x-1 >= 0):
-            myNeighbors.append(genome[y+1][x-1])
-        else:
-            myNeighbors.append(None)
-        # 6 
-        if (x-1 >= 0):
-            myNeighbors.append(genome[y][x-1])
-        else:
-            myNeighbors.append(None)
-        # 7
-        if (y-1 >= 0 and x-1 >= 0):
-            myNeighbors.append(genome[y-1][x-1])
-        else:
-            myNeighbors.append(None)
+            # print(f"[#] Checking top side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x - startOffset + currSquare
+                newY = y - currDist
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                neighbors[currDist-1].append(neighbor)
+                # print()
 
-        return(myNeighbors)
+            # print(f"[#] Checking right side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x + currDist
+                newY = y - startOffset + currSquare
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                neighbors[currDist-1].append(neighbor)
+                # print()
+
+            # backwards
+            # print(f"[#] Checking bottom side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x + startOffset - currSquare
+                newY = y + currDist
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                neighbors[currDist-1].append(neighbor)
+                # print()
+
+            # print(f"[#] Checking left side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x - currDist
+                newY = y + startOffset - currSquare
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                neighbors[currDist-1].append(neighbor)
+                # print()
+            currSize += 3
+            startOffset += 1
+
+        return(neighbors)
+
+    def distFromX(self, genome, point:tuple, within:int, targets:list):
+        # print(f"[#] Running distFromX({genome}, {point}, {within}, {targets})")
+        x,y = point
+        neighbors = []
+        currSize = 2
+        startOffset = 0
+        dir = 1
+        for currDist in range(1,within+1):
+            neighbors.append([])
+            # print(f"[?] Current distance is {currDist}")
+            # print(f"[?] Neighbors is {neighbors}")
+            # print(f"[?] startOffset is {startOffset}")
+            # print(f"[?] currSize is {currSize}")
+
+            # print(f"[#] Checking top side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x - startOffset + currSquare
+                newY = y - currDist
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                if (neighbor in targets):
+                    return(currDist)
+                else:
+                    neighbors[currDist-1].append(neighbor)
+            #     print()
+
+            # print(f"[#] Checking right side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x + currDist
+                newY = y - startOffset + currSquare
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                if (neighbor in targets):
+                    return(currDist)
+                else:
+                    neighbors[currDist-1].append(neighbor)
+            #     print()
+
+            # # backwards
+            # print(f"[#] Checking bottom side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x + startOffset - currSquare
+                newY = y + currDist
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                if (neighbor in targets):
+                    return(currDist)
+                else:
+                    neighbors[currDist-1].append(neighbor)
+                # print()
+
+            # print(f"[#] Checking left side...")
+            for currSquare in range(0,currSize-startOffset):
+                newX = x - currDist
+                newY = y + startOffset - currSquare
+                if (newX < 0 or newX >= len(genome[0])):
+                    # print(f"\t[#] currSquare{currSquare} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                if (newY < 0 or newY >= len(genome)):
+                    # print(f"\t[#] currDist {currDist} out of range")
+                    neighbors[currDist-1].append(None)
+                    continue
+                neighbor = genome[newY][newX]
+                # print(f"\t[?] newX = {newX}")
+                # print(f"\t[?] newY = {currDist}")
+                # print(f"\t[?] Current neighbor is {neighbor}")
+                if (neighbor in targets):
+                    return(currDist)
+                else:
+                    neighbors[currDist-1].append(neighbor)
+                # print()
+            currSize += 3
+            startOffset += 1
+
+        return(-1)
 
     def heightFromGround(self,genome, x,y):
         height = 0
@@ -128,7 +278,131 @@ class Individual_Grid(object):
         # STUDENT implement a mutation operator, also consider not mutating this individual
         # STUDENT also consider weighting the different tile types so it's not uniformly random
         # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
-        pass
+        '''
+            To do:
+                Make mutation not completely random (I.e. an informed random).
+                    For example, increase the chance for a floating block if 
+                    its neighbor is a block or if it is within three spaces 
+                    above another block; increase chance for mshroom box if 
+                    left & right neighbors are smashable or if it's one above
+                    the ground; or increase the chance for coin if within one 
+                    space of another coin or if within 3 spaces of ground with
+                    air between
+        '''
+        mutChance_perNome = 60
+        # ^ Chance for mutation at all
+        # v Chance for mutation on this specific cell
+        mutChance_perCell = 10
+
+        # mutOptions = { # Each instance represents a 5% chance
+        #     '-': 30,
+        #     'X': 30,
+        #     '?': 30,
+        #     'M': 30,
+        #     'B': 30,
+        #     'o': 30,
+        #     '|': 30,
+        #     'T': 30,
+        #     'E': 30
+        # }
+
+
+        if (random.randrange(1,100) > mutChance_perNome):
+            # print("\t\t\t[#] Did not mutate")
+            return(False) #return without mutating
+        else:
+            left = 0
+            right = width
+            # print(f"\t\t\t[?] Data:\n\t\t\t\tleft: {left}\n\t\t\t\tright: {right}\n\t\t\t\theight: {height}")
+            for y in range(height-1,0,-1):
+                for x in range(left, right):
+                    mutOptions = options.copy()
+                    mutOptions.extend(['-','-','-','-','-','-','-','-','-','-'])
+                    myNeighbors = self.findNeighbors(genome,(x,y),1)
+                    if ('m' in myNeighbors and y != len(genome)-1):
+                        genome[y][x] = '-'
+                    elif (genome[y][x] != 'm' and genome[y][x] != 'v' and genome[y][x] != 'f'):
+                        currVal = genome[y][x]
+
+                        # If I'm floating midair and I'm a ground, the block below me must also be a ground
+                        if (currVal == 'X' and self.heightFromGround(genome,x,y) != 0):
+                            genome[y+1][x] = 'X'
+                            continue
+                        
+                        # If I'm a pipe-top and I'm underneath another pipe piece, I must be a pipe-body
+                        if (currVal == 'T' and myNeighbors[0][0] in ('|', 'T')):
+                            genome[y][x] = '|'
+                            continue
+
+                        # If I'm a pipe-body and there is not another pipe piece above me, I must be a pipe-top
+                        if (currVal == '|' and myNeighbors[0][0] not in ('|', 'T')):
+                            genome[y][x] = 'T'
+                            continue
+
+                        # If I'm floating midair and I'm a pipe piece, the block below me must be a pipe-body
+                        if (currVal in ('|','T') and self.heightFromGround(genome,x,y) != 0):
+                            genome[y+1][x] = '|'
+                            continue
+
+                        # If I don't have to be anything in particular, I can mutate
+                        if (random.randrange(0,100) <= mutChance_perCell):
+                            myNeighbors = self.findNeighbors(genome,(x,y),1)
+
+                            # If I'm a ? block and there is air, an enemy, or a coin above me, I can be a mushroom block
+                            if (genome[y][x] == '?'):
+                                if (myNeighbors[0][0] == 'E' or myNeighbors[0][0] == '-' or myNeighbors[0][0] == 'o'):
+                                    mutOptions.extend(['M','?','?','?'])
+
+                            # If I'm within 3 spaces of another platform, I can be a platform
+                            if (self.distFromX(genome,(x,y),3,['B','?','M','T','X'])):
+                                mutOptions.extend(['B','B','X','X','T','T','?'])
+
+                            # If there is a platform next to me, I can be a platform
+                            if (myNeighbors[0][6] in ('B','?','M','|','T','X')):
+                                mutOptions.extend(['B','?','M','|','T','X',myNeighbors[0][6],myNeighbors[0][6]])
+                            elif (myNeighbors[0][2] in ('B','?','M','|','T','X')):
+                                mutOptions.extend(['B','?','M','|','T','X',myNeighbors[0][2],myNeighbors[0][2]])
+
+                            # If I'm surrounded by bricks and have air underneath me, I can be a ? block
+                            if (myNeighbors[0][6] == 'B' and myNeighbors[0][2] == 'B' and myNeighbors[0][4] == '-'):
+                                mutOptions.extend(['?','?','?','?'])
+
+                            # If I'm above or below a ground, I can be ground
+                            if (myNeighbors[0][4] == 'X' or myNeighbors[0][0] == 'X'):
+                                mutOptions.extend(['X','X','X','X'])
+
+                            # If I'm on a pipe or ground, I can be a pipe
+                            if (myNeighbors[0][4] in ('|', 'T', 'X')):
+                                mutOptions.extend(['|','|','|'])
+
+                            # If I'm floating in midair, I cannot be a pipe or ground
+                            if (self.heightFromGround(genome,x,y) != 0):
+                                for banned in ('X','T','|'):
+                                    while (banned in mutOptions):
+                                        mutOptions.remove(banned)
+
+                            # If I'm on a platform and I'm atleast 5 spaces away from another enemy or the player, I can be an enemy
+                            if (self.distFromX(genome,(x,y),5,['E','m']) < 0 and self.heightFromGround(genome,x,y) == 0):
+                                mutOptions.extend(['E'])
+
+                            # If I'm floating at least 2 spaces off the ground and I'm within 3 spaces of a platform or another coin, I can be a coin
+                            if (self.heightFromGround(genome,x,y) >= 2 and self.distFromX(genome,(x,y),3,['B','?','M','X','T','E','|'])):
+                                mutOptions.extend(['o','o'])
+
+                            #If I'm at the bottom level, I can only be a ground, air, or a pipe-top
+                            if (y >= len(genome)-1):
+                                for banned in ('o','B','?','M','|','E'):
+                                    while (banned in mutOptions):
+                                        mutOptions.remove(banned)
+                                mutOptions.extend(['X','T','-'])
+
+                            newVal = random.choice(mutOptions)
+                            # print(f"\t\t\t [?] Mutation options for this cell: {mutOptions}")
+                            # print(f"\t\t\t [#] Mutated! Cell ({x},{y}): {currVal} -> {newVal}")
+                            genome[y][x] = newVal
+                            
+            self.genome = genome
+            return(True)
 
     # Create zero or more children from self and other
     def generate_children(self, other):
@@ -136,8 +410,8 @@ class Individual_Grid(object):
         new_genome = copy.deepcopy(self.genome)
         # Leaving first and last columns alone...
         # do crossover with other
-        left = 1
-        right = width - 1
+        left = width//2
+        right = width - left
         # print(f"\t\t[?] Data:\n\t\t\tleft: {left}\n\t\t\tright: {right}\n\t\t\tlen(self.genome) AKA len(new_genome): {len(self.genome)}\n\t\t\tlen(other.genome): {len(other.genome)}\n\t\t\tnew_genome(len: {len(new_genome)}): {new_genome}")
         for y in range(height):
             for x in range(left, right):

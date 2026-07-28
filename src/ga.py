@@ -217,16 +217,21 @@ class Individual_DE(object):
         # STUDENT Add more metrics?
         # STUDENT Improve this with any code you like
         coefficients = dict(
-            meaningfulJumpVariance=0.5,
+            meaningfulJumpVariance=1.5,
             negativeSpace=0.6,
             pathPercentage=0.5,
             emptyPercentage=0.6,
             linearity=-0.5,
-            solvability=2.0
+            solvability=5.0
         )
         penalties = 0
         # STUDENT For example, too many stairs are unaesthetic.  Let's penalize that
         if len(list(filter(lambda de: de[1] == "6_stairs", self.genome))) > 5:
+            penalties -= 2
+        tall_elements = len(list(filter(lambda de:self.element_too_tall(de), self.genome)))
+        if tall_elements > 5:
+            penalties -= (tall_elements+3)
+        if len(self.genome) < 20:
             penalties -= 2
         # STUDENT If you go for the FI-2POP extra credit, you can put constraint calculation in here too and cache it in a new entry in __slots__.
         self._fitness = sum(map(lambda m: coefficients[m] * measurements[m],
@@ -237,6 +242,18 @@ class Individual_DE(object):
         if self._fitness is None:
             self.calculate_fitness()
         return self._fitness
+
+    def element_too_tall(self, de):
+        de_type = de[1]
+        if de_type in ["4_block", "5_qblock", "3_coin"]:
+            y = de[2]
+        elif de_type == "7_pipe":
+            y = 16-de[2]
+        elif de_type == "1_platform":
+            y = de[3]
+        else:
+            return False
+        return y<8
 
     def mutate(self, new_genome):
         # STUDENT How does this work?  Explain it in your writeup.
@@ -322,14 +339,16 @@ class Individual_DE(object):
         # STUDENT How does this work?  Explain it in your writeup.
         pa = random.randint(0, len(self.genome) - 1)
         pb = random.randint(0, len(other.genome) - 1)
-        a_part = self.genome[:pa] if len(self.genome) > 0 else []
-        b_part = other.genome[pb:] if len(other.genome) > 0 else []
+        sorted_self = sorted(self.genome, key=lambda de: (de[0]))
+        sorted_other = sorted(other.genome, key=lambda de: (de[0]))
+        a_part = sorted_self[:pa] if len(self.genome) > 0 else []
+        b_part = sorted_other[pb:] if len(other.genome) > 0 else []
         ga = a_part + b_part
-        b_part = other.genome[:pb] if len(other.genome) > 0 else []
-        a_part = self.genome[pa:] if len(self.genome) > 0 else []
+        b_part = sorted_other[:pb] if len(other.genome) > 0 else []
+        a_part = sorted_self[pa:] if len(self.genome) > 0 else []
         gb = b_part + a_part
         # do mutation
-        return Individual_DE(self.mutate(ga)), Individual_DE(self.mutate(gb))
+        return random.choice([Individual_DE(self.mutate(ga)), Individual_DE(self.mutate(gb))])
 
     # Apply the DEs to a base level.
     def to_level(self):
@@ -379,7 +398,18 @@ class Individual_DE(object):
     @classmethod
     def empty_individual(_cls):
         # STUDENT Maybe enhance this
-        g = []
+        #g = []
+        elt_count = random.randint(8, 128)
+        g = [random.choice([
+            (random.randint(1, width - 2), "0_hole", random.randint(2, 8)),
+            (random.randint(1, width - 2), "1_platform", random.randint(1, 8), random.randint(0, height - 4), random.choice(["?", "X", "B"])),
+            (random.randint(1, width - 2), "2_enemy"),
+            (random.randint(1, width - 2), "3_coin", random.randint(4, height - 1)),
+            (random.randint(1, width - 2), "4_block", random.randint(4, height - 1), random.choice([True, False])),
+            (random.randint(1, width - 2), "5_qblock", random.randint(4, height - 1), random.choice([True, False])),
+            (random.randint(1, width - 2), "6_stairs", random.randint(4, height - 1), random.choice([-1, 1])),
+            (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 4))
+        ]) for i in range(elt_count)]
         return Individual_DE(g)
 
     @classmethod
@@ -388,10 +418,16 @@ class Individual_DE(object):
         elt_count = random.randint(8, 128)
         g = [random.choice([
             (random.randint(1, width - 2), "0_hole", random.randint(1, 8)),
+            (random.randint(1, width - 2), "0_hole", random.randint(1, 8)),
+            (random.randint(1, width - 2), "1_platform", random.randint(1, 8), random.randint(0, height - 1), random.choice(["?", "X", "B"])),
             (random.randint(1, width - 2), "1_platform", random.randint(1, 8), random.randint(0, height - 1), random.choice(["?", "X", "B"])),
             (random.randint(1, width - 2), "2_enemy"),
+            (random.randint(1, width - 2), "2_enemy"),
+            (random.randint(1, width - 2), "3_coin", random.randint(0, height - 1)),
             (random.randint(1, width - 2), "3_coin", random.randint(0, height - 1)),
             (random.randint(1, width - 2), "4_block", random.randint(0, height - 1), random.choice([True, False])),
+            (random.randint(1, width - 2), "4_block", random.randint(0, height - 1), random.choice([True, False])),
+            (random.randint(1, width - 2), "5_qblock", random.randint(0, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "5_qblock", random.randint(0, height - 1), random.choice([True, False])),
             (random.randint(1, width - 2), "6_stairs", random.randint(1, height - 4), random.choice([-1, 1])),
             (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 4))
@@ -399,7 +435,7 @@ class Individual_DE(object):
         return Individual_DE(g)
 
 
-Individual = Individual_Grid
+Individual = Individual_DE
 
 
 def generate_successors(population):
